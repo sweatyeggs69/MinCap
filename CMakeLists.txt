@@ -172,6 +172,7 @@ if(TARGET SDL3::SDL3)
         src/options/options_panel.cpp
         src/options/presenter.cpp
         src/options/input.cpp
+        src/options/menu_pad.cpp
     )
     target_include_directories(mincap_options PUBLIC src)
     target_link_libraries(mincap_options PUBLIC imgui mincap_display mincap_app mincap_states SDL3::SDL3)
