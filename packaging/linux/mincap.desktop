@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=MinCap
+GenericName=The Legend of Zelda: The Minish Cap (native)
+Comment=Play your own copy of The Legend of Zelda: The Minish Cap natively
+Exec=mincap
+Icon=mincap
+StartupWMClass=MinCap
+Terminal=false
+Categories=Game;
