@@ -102,26 +102,45 @@ void Gba::wide_level_detect() {
         L.height = height;
         L.tiles_w = tiles_w;
         L.tiles_h = tiles_h;
-        L.cam_x = (dx & ~15) - (hofs >= 256 ? 512 : 0);
-        L.cam_y = (dy & ~15) - 8 - (vofs >= 256 ? 512 : 0);
+        // The game runs the next frame's logic during VBlank, so by the time the frame is drawn
+        // gRoomControls may already hold the next camera while VRAM still shows this one. Try
+        // the camera from RAM first, then the neighbouring 16-pixel blocks, and keep the one
+        // VRAM agrees with.
+        const s32 base_x = (dx & ~15) - (hofs >= 256 ? 512 : 0);
+        const s32 base_y = (dy & ~15) - 8 - (vofs >= 256 ? 512 : 0);
 
         // Sample tiles spread over the visible area; at least 15 of every 16 must agree
         // (animated tiles and doors can differ for a frame).
         const u32 screen_base = ((cnt >> 8) & 31) * 0x800;
         static constexpr int kSx[] = {4, 36, 68, 100, 132, 164, 196, 228};
         static constexpr int kSy[] = {12, 60, 108, 148};
-        int checked = 0, match = 0;
-        for (int sy : kSy)
-            for (int sx : kSx) {
-                const s32 ax = sx + s32(hofs) + L.cam_x, ay = sy + s32(vofs) + L.cam_y;
-                if (ax < 0 || ay < 0 || ax >= tiles_w * 8 || ay >= tiles_h * 8) continue;
-                const u32 vx = (u32(sx) + hofs) & 255, vy = (u32(sy) + vofs) & 255;
-                const u32 off = screen_base + (vy >> 3) * 64 + (vx >> 3) * 2;
-                const u16 vram_e = u16(vram_[off] | (vram_[off + 1] << 8));
-                ++checked;
-                if (vram_e == wide_level_entry(bg, ax >> 3, ay >> 3)) ++match;
+        auto score = [&](s32 cam_x, s32 cam_y) {
+            int checked = 0, match = 0;
+            for (int sy : kSy)
+                for (int sx : kSx) {
+                    const s32 ax = sx + s32(hofs) + cam_x, ay = sy + s32(vofs) + cam_y;
+                    if (ax < 0 || ay < 0 || ax >= tiles_w * 8 || ay >= tiles_h * 8) continue;
+                    const u32 vx = (u32(sx) + hofs) & 255, vy = (u32(sy) + vofs) & 255;
+                    const u32 off = screen_base + (vy >> 3) * 64 + (vx >> 3) * 2;
+                    const u16 vram_e = u16(vram_[off] | (vram_[off + 1] << 8));
+                    ++checked;
+                    if (vram_e == wide_level_entry(bg, ax >> 3, ay >> 3)) ++match;
+                }
+            return checked >= 8 && match * 16 >= checked * 15 ? match : -1;
+        };
+        // RAM's camera first (it wins ties), then the nearest blocks outwards.
+        static constexpr int kSteps[] = {0, -1, 1, -2, 2};
+        int best = -1;
+        for (int ky : kSteps)
+            for (int kx : kSteps) {
+                const int m = score(base_x + kx * 16, base_y + ky * 16);
+                if (m > best) {
+                    best = m;
+                    L.cam_x = base_x + kx * 16;
+                    L.cam_y = base_y + ky * 16;
+                }
             }
-        if (checked < 8 || match * 16 < checked * 15) {
+        if (best < 0) {
             L = WideLevel{};
             continue;
         }
