@@ -23,6 +23,7 @@ inline constexpr const char* kFileSafeTitle = "The Legend of Zelda - The Minish 
 // GBA cartridge header of the supported dump.
 inline constexpr const char* kHeaderTitle = "GBAZELDA MC";  // 0xA0, 12 bytes
 inline constexpr const char* kGameCode = "BZME";            // 0xAC, 4 bytes
+inline constexpr const char* kMakerCode = "01";             // 0xB0, 2 bytes (Nintendo)
 inline constexpr unsigned kRevision = 0;                    // 0xBC
 inline constexpr std::size_t kRomSize = 16 * 1024 * 1024;
 
@@ -31,6 +32,22 @@ inline constexpr std::size_t kRomSize = 16 * 1024 * 1024;
 // decompilation builds. If this is ever emptied, a ROM is accepted on a header match instead and
 // the launcher labels it "header match (fingerprint not pinned yet)".
 inline constexpr const char* kExpectedSha1 = "b4bd50e4131b027c334547b4524e2dbbd4227130";
+
+// Other releases of the game, recognised only so the error message can say what the file is.
+// None of them can run: the recompiled code is the USA revision 0 code.
+struct OtherRelease {
+    const char* sha1;       // exact dump, or nullptr to match on the game code alone
+    const char* game_code;  // 0xAC
+    const char* name;       // shown to the user
+};
+inline constexpr OtherRelease kOtherReleases[] = {
+    {"cff199b36ff173fb6faf152653d1bccf87c26fb7", "BZMP", "the European release"},
+    {"6c5404a1effb17f481f352181d0f1c61a2765c5d", "BZMJ", "the Japanese release"},
+    {"63fcad218f9047b6a9edbb68c98bd0dec322d7a1", "", "the USA demo"},
+    {"9cdb56fa79bba13158b81925c1f3641251326412", "", "the Japanese demo"},
+    {nullptr, "BZMP", "a European release"},
+    {nullptr, "BZMJ", "a Japanese release"},
+};
 
 // Battery save: 64 Kbit (8 KiB) serial EEPROM (the ROM carries the EEPROM_V124 library string).
 // The runtime picks the chip from that string; this is the size of the save file it writes.
