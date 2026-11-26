@@ -3,22 +3,9 @@
   "format": 1,
   "name": "MinCap",
   "repo": "sweatyeggs69/MinCap",
-  "game": {
-    "kind": "iso",
-    "label": "Your own Game Boy Advance ROM (.gba) of The Legend of Zelda: The Minish Cap, USA release (AGB-BZME), revision 0.",
-    "dumps": [
-      { "name": "USA", "size": 16777216, "crc32": "ABCEBBB1" }
-    ]
-  },
   "start": {
     "program": ["MinCap.exe", "usr/bin/mincap", "mincap", "AppRun"],
-    "args": ["--game", "{game}"]
-  },
-  "prepare": {
-    "program": ["MinCap.exe", "usr/bin/mincap", "mincap", "AppRun"],
-    "args": ["--prepare", "--game", "{game}"],
-    "label": "Checking your ROM and setting it as MinCap's game",
-    "timeout": 60
+    "args": []
   },
   "config": [
     {
@@ -27,8 +14,7 @@
       "file": [
         { "path": "{config}/MinCap/MinCap/settings.ini", "if": "{config}/Microsoft/Windows" },
         { "path": "{local}/MinCap/MinCap/settings.ini" }
-      ],
-      "game_path": "rom.path"
+      ]
     }
   ],
   "folders": {
@@ -43,10 +29,6 @@
     "{local}/MinCap/MinCap/saves",
     "{local}/MinCap/MinCap/states"
   ],
-  "exit_codes": {
-    "2": "MinCap couldn't find your ROM. Pick it again on the game's page.",
-    "3": "That ROM isn't the supported dump. MinCap needs The Legend of Zelda: The Minish Cap (USA), revision 0."
-  },
   "settings": [
     {
       "id": "window",
